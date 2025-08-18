@@ -12,19 +12,24 @@ struct Header: View {
     
     var body: some View {
         NavigationStack{
-            ZStack{
-                Image("little-lemon-logo")
-                HStack{
-                    if isLoggedIn {
-                        Spacer()
-                        NavigationLink(destination: UserProfile()) {
-                            Image("profile-image-placeholder")
-                                .resizable()
-                                .frame(width:50,height:50)
-                                .padding(.trailing)
-                        }
+            
+            if UserDefaults.standard.bool(forKey: kIsLoggedIn) {
+                ZStack{
+                    Image("little-lemon-logo")
+                    HStack{
+                            Spacer()
+                            NavigationLink(destination: UserProfile()) {
+                                Image("profile-image-placeholder")
+                                    .resizable()
+                                    .frame(width:50,height:50)
+                                    .padding(.trailing)
+                            }
                     }
                 }
+            }else{
+                HStack{
+                    Image("little-lemon-logo")
+                }.frame(maxWidth:.infinity, alignment:.center)
             }
         }.frame(height:45)
          .onAppear(){

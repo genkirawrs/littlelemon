@@ -14,10 +14,11 @@ struct Home: View {
         TabView(){
             Menu()
                 .tag(0)
+                .environment(\.managedObjectContext, persistence.container.viewContext)
                 .tabItem {
                     Label("Menu",systemImage: "list.dash")
                 }
-                .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext)
+                
             UserProfile()
                 .tag(0)
                 .tabItem {

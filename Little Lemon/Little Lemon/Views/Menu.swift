@@ -11,6 +11,7 @@ import CoreData
 struct Menu: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State var searchText = ""
+    @State var menuFetched = false
     
     var body: some View {
         NavigationView{
@@ -18,38 +19,7 @@ struct Menu: View {
                 Header()
                 
                 VStack{
-                    Text ("Little Lemon")
-                        .font(Font.custom("markazitext-medium", size: 50))
-                        .padding(.bottom,-10)
-                        .frame(maxWidth:.infinity,alignment:.leading)
-                        .foregroundColor(Color(#colorLiteral(red: 0.957, green: 0.808, blue: 0.078, alpha: 1)))
-                    HStack{
-                        VStack{
-                                Text ("Chicago")
-                                    .frame(maxWidth:.infinity,alignment:.leading)
-                                    .padding(.bottom,5)
-                                    .font(Font.custom("markazitext-regular", size: 30))
-                                    .foregroundColor(.white)
-
-                            Text ("We are a family owned Mediterranean restaurant, focused on traditional recipes served with a modern twist.")
-                                .frame(maxWidth:.infinity,alignment:.leading)
-                                .font(Font.custom("Karla-Medium",size:16))
-                                .foregroundColor(.white)
-                            Spacer()
-                        }.frame(maxHeight:150)
-                         .padding(.top,-15)
-                        VStack{
-                            Image("hero-image")
-                                .resizable()
-                                .frame(maxWidth: 120, maxHeight: 140)
-                                .aspectRatio( contentMode: .fill)
-                                .clipShape(Rectangle())
-                                .cornerRadius(15)
-                                .padding(.top,-15)
-                            Spacer()
-                        }.frame(maxHeight:150)
-                    }
-
+                    HeroContent()
                     TextField("Search menu for...", text: $searchText)
                         .textFieldStyle(.roundedBorder)
                         .padding(.top,-15)
@@ -72,7 +42,7 @@ struct Menu: View {
                                 .foregroundColor(.black)
                                 .padding([.leading, .trailing], 20)
                                 .padding([.top, .bottom], 8)
-                                .background(Color(red: 0.929, green: 0.937, blue: 0.933))
+                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
                                 .cornerRadius(20)
                             
                             Text ("Mains")
@@ -80,7 +50,7 @@ struct Menu: View {
                                 .foregroundColor(.black)
                                 .padding([.leading, .trailing], 20)
                                 .padding([.top, .bottom], 8)
-                                .background(Color(red: 0.929, green: 0.937, blue: 0.933))
+                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
                                 .cornerRadius(20)
                             
                             Text ("Dessert")
@@ -88,7 +58,7 @@ struct Menu: View {
                                 .foregroundColor(.black)
                                 .padding([.leading, .trailing], 20)
                                 .padding([.top, .bottom], 8)
-                                .background(Color(red: 0.929, green: 0.937, blue: 0.933))
+                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
                                 .cornerRadius(20)
                             
                             Text ("Drinks")
@@ -96,7 +66,7 @@ struct Menu: View {
                                 .foregroundColor(.black)
                                 .padding([.leading, .trailing], 20)
                                 .padding([.top, .bottom], 8)
-                                .background(Color(red: 0.929, green: 0.937, blue: 0.933))
+                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
                                 .cornerRadius(20)
                         }
                     }
@@ -109,49 +79,57 @@ struct Menu: View {
                         
                         List{
                             ForEach(dishes) {dish in
-                                HStack{
-                                    VStack{
-                                        Text(dish.title!)
-                                            .frame(maxWidth:.infinity,alignment:.leading)
-                                            .font(Font.custom("Karla-Bold",size:16))
-                                            .frame(alignment:.leading)
-                                        Text(dish.desc!)
-                                            .frame(maxWidth:.infinity,alignment:.leading)
-                                            .font(Font.custom("Karla-Regular",size:14))
-                                            .foregroundColor(Color(#colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1)))
-                                            .lineLimit(2)
-                                            .padding(.top,1)
-                                            .padding(.bottom,5)
+                                NavigationLink(destination: DishDetail(dish:dish)){
+                                    HStack{
+                                        VStack{
+                                            Text(dish.title!)
+                                                .frame(maxWidth:.infinity,alignment:.leading)
+                                                .font(Font.custom("Karla-Bold",size:16))
+                                                .frame(alignment:.leading)
+                                            Text(dish.desc!)
+                                                .frame(maxWidth:.infinity,alignment:.leading)
+                                                .font(Font.custom("Karla-Regular",size:14))
+                                                .foregroundColor(Color(#colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1)))
+                                                .lineLimit(2)
+                                                .padding(.top,1)
+                                                .padding(.bottom,5)
                                             
-                                        Text("$\(dish.price!)")
-                                            .frame(maxWidth:.infinity,alignment:.leading)
-                                            .font(Font.custom("Karla-Regular",size:16))
-                                    }.frame(alignment:.leading)
-                                    
-                                    AsyncImage(url: URL(string: dish.image!)) { image in
-                                        image.resizable()
-                                    } placeholder: {
-                                        ProgressView()
-                                    }
+                                            Text("$\(dish.price!)")
+                                                .frame(maxWidth:.infinity,alignment:.leading)
+                                                .font(Font.custom("Karla-Regular",size:16))
+                                        }.frame(alignment:.leading)
+                                        
+                                        AsyncImage(url: URL(string: dish.image!)) { image in
+                                            image.resizable()
+                                        } placeholder: {
+                                            ProgressView()
+                                        }
                                         .frame(width: 100, height: 100)
                                         .cornerRadius(10)
+                                    }
                                 }
                             }
                         }.frame(maxWidth:.infinity)
                             .contentMargins(.all, 0)
                             .cornerRadius(0)
-                        
-                        
                     }
                 }
             }.onAppear(){
-                getMenuData(viewContext:viewContext)
+                if !menuFetched {
+                    let fetchRequest = NSFetchRequest<NSManagedObject>(entityName: "Dish")
+                        if let count = try? viewContext.count(for: fetchRequest){
+                            if count > 0 {
+                                menuFetched = true
+                            }else{
+                                getMenuData()
+                            }
+                        }
+                }
             }
-                
         }
     }
     
-    func getMenuData(viewContext: NSManagedObjectContext) {
+    func getMenuData() {
         PersistenceController.shared.clear()
 
         let url = URL(string:"https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/menu.json")!
@@ -170,6 +148,7 @@ struct Menu: View {
                        // print(oneDish)
                     }
                     try? viewContext.save()
+                    menuFetched = true
                 }
             }
         }

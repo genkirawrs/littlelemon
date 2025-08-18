@@ -14,7 +14,6 @@ let kIsLoggedIn = "isLoggedIn key"
 
 struct Onboarding: View {
     @State var isLoggedIn = false;
-    @State private var path = NavigationPath()
     
     @State var showFormInvalidMessage = false;
     @State var errorMsg = "";
@@ -24,41 +23,48 @@ struct Onboarding: View {
     @State var email: String = "";
     
     var body: some View {
-        NavigationStack(path: $path){ //switched to Navigation Stack b/c of deprecation of NavigationLink for ios16
+        NavigationStack{
+            NavigationLink(destination: Home(), isActive: $isLoggedIn) { }
+
+            Header()
+            VStack{
+                HeroContent()
+            }.frame(maxWidth: .infinity, alignment:.leading)
+             .padding(.trailing,8)
+             .padding(.leading,8)
+             .background(Color(#colorLiteral(red: 0.286, green: 0.369, blue: 0.341, alpha: 1)))
             VStack (alignment:.leading){
-                //keeping this here, but this method is now deprecated in ios16?
-                //trying to implement functionality using navigationDestination
-                /*
-                NavigationLink(destination: Home(), isActive: $isLoggedIn)){
-                    EmptyView()
-                }
-                */
-                Text("REGISTRATION")
-                    .font(.title)
-                    .padding(.bottom, 5)
+
+                Text("Create Your Account")
+                    .frame(maxWidth:.infinity,alignment:.leading)
+                    .font(Font.custom("Karla-Bold",size:20))
+                    .padding(2)
                 
                 Divider()
-                    .padding(.bottom, 60)
+                    .padding(.bottom, 30)
                 
                 VStack (alignment:.leading){
                     HStack{
-                        Text("FIRST NAME: ")
-                            .font(.title3)
-                        TextField("Your first name...", text: $firstName)
+                        Text("FIRST NAME*: ")
+                            .font(Font.custom("Karla-Bold",size:18))
+                            .foregroundColor(Color(#colorLiteral(red: 0.4, green: 0.4, blue: 0.4, alpha: 1)))
+                        TextField("Your first name", text: $firstName)
                     }
                     Divider()
                         .padding(.bottom, 20)
                     HStack{
-                        Text("LAST NAME: ")
-                            .font(.title3)
-                        TextField("Your last name...", text: $lastName)
+                        Text("LAST NAME*: ")
+                            .font(Font.custom("Karla-Bold",size:18))
+                            .foregroundColor(Color(#colorLiteral(red: 0.4, green: 0.4, blue: 0.4, alpha: 1)))
+                        TextField("Your last name", text: $lastName)
                     }
                     Divider()
                         .padding(.bottom, 20)
                     HStack{
-                        Text("E-MAIL: ")
-                            .font(.title3)
-                        TextField("Your e-mail...", text: $email)
+                        Text("E-MAIL*: ")
+                            .font(Font.custom("Karla-Bold",size:18))
+                            .foregroundColor(Color(#colorLiteral(red: 0.4, green: 0.4, blue: 0.4, alpha: 1)))
+                        TextField("Your e-mail", text: $email)
                             .keyboardType(.emailAddress)
                             .textContentType(.emailAddress)
                             .disableAutocorrection(true)
@@ -67,45 +73,63 @@ struct Onboarding: View {
                     Divider()
                         .padding(.bottom, 20)
                     
-                    Button("Register", action:{
+                    Button(action:{
                         
-                        let emailIsValid = isValid(email: email)
-                        
-                        var invalidFirstNameMsg = ""
-                        if !firstName.isEmpty {
-                            UserDefaults.standard.set(firstName, forKey: kFirstName)
-                        }else{
-                            invalidFirstNameMsg = "\nA First Name is required!\n"
-                        }
-                        
-                        var invalidLastNameMsg = ""
-                        if !lastName.isEmpty {
-                            UserDefaults.standard.set(lastName, forKey: kLastName)
-                        }else{
-                            invalidLastNameMsg = "\nA Last Name is required!\n"
-                        }
-                        
-                        var invalidEmailMsg = ""
-                        if !email.isEmpty && emailIsValid {
-                            UserDefaults.standard.set(email, forKey: kEmail)
-                        }else{
-                            invalidEmailMsg = "\nA valid Email Address is required!\n"
-                        }
-                        
-                        if !invalidFirstNameMsg.isEmpty || !invalidLastNameMsg.isEmpty || !invalidEmailMsg.isEmpty {
+                        if firstName.isEmpty && lastName.isEmpty && email.isEmpty{
                             self.showFormInvalidMessage = true
-                            self.errorMsg = invalidFirstNameMsg + invalidLastNameMsg + invalidEmailMsg
+                            self.errorMsg = "All fields are required!"
                         }else{
-                            UserDefaults.standard.set(true, forKey: kIsLoggedIn)
-                            isLoggedIn = true
+                            
+                            let emailIsValid = isValid(email: email)
+                            
+                            var invalidFirstNameMsg = ""
+                            if !firstName.isEmpty {
+                                UserDefaults.standard.set(firstName, forKey: kFirstName)
+                            }else{
+                                invalidFirstNameMsg = "\nA First Name is required!\n"
+                            }
+                            
+                            var invalidLastNameMsg = ""
+                            if !lastName.isEmpty {
+                                UserDefaults.standard.set(lastName, forKey: kLastName)
+                            }else{
+                                invalidLastNameMsg = "\nA Last Name is required!\n"
+                            }
+                            
+                            var invalidEmailMsg = ""
+                            if !email.isEmpty && emailIsValid {
+                                UserDefaults.standard.set(email, forKey: kEmail)
+                            }else{
+                                invalidEmailMsg = "\nA valid Email Address is required!\n"
+                            }
+                            
+                            if !invalidFirstNameMsg.isEmpty || !invalidLastNameMsg.isEmpty || !invalidEmailMsg.isEmpty {
+                                self.showFormInvalidMessage = true
+                                self.errorMsg = invalidFirstNameMsg + invalidLastNameMsg + invalidEmailMsg
+                            }else{
+                                UserDefaults.standard.set(true, forKey: kIsLoggedIn)
+                                isLoggedIn = true
+                            }
                         }
-                    }).padding(.init(top: 10, leading: 30, bottom: 10, trailing: 30))
-                        .foregroundColor(.white)
-                        .background(Color.blue)
-                        .cornerRadius(20)
-                        .padding(.top, 30)
-                        .frame(maxWidth: .infinity)
+                    }){
+                        HStack {
+                          Spacer()
+                          Text("Register")
+                          Spacer()
+                        }
+                        .font(Font.custom("Karla-Bold",size:20))
+                        .padding(10)
+                        .background(Color(#colorLiteral(red: 0.957, green: 0.808, blue: 0.078, alpha: 1)))
+                        .foregroundColor(.black)
+                        .contentShape(Rectangle())
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5) // Match corner radius
+                                .stroke(Color(#colorLiteral(red: 0.824, green: 0.612, blue: 0, alpha: 1)), lineWidth: 2)
+                        )
+                    }
+                    .padding(.top,20)
                     Spacer()
+
                 }.alert("ERROR", isPresented: $showFormInvalidMessage, actions: {
                     Button("OK", role: .cancel) { }
                 }, message: {
@@ -113,10 +137,8 @@ struct Onboarding: View {
                 })
             }
             .padding(.horizontal, 20)
-            .navigationDestination(isPresented: $isLoggedIn){
-                    Home()
-            }
-        }.onAppear(){
+        }.navigationBarBackButtonHidden(true)
+         .onAppear(){
             if UserDefaults.standard.bool(forKey: kIsLoggedIn) {
                 isLoggedIn = true
             }
