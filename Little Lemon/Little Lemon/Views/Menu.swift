@@ -11,6 +11,10 @@ import CoreData
 struct Menu: View {
     @Environment(\.managedObjectContext) private var viewContext
     @State var searchText = ""
+    @State var startersOn = false
+    @State var mainsOn = false
+    @State var dessertOn = false
+    @State var drinksOn = false
     @State var menuFetched = false
     
     var body: some View {
@@ -36,38 +40,58 @@ struct Menu: View {
                         .font(Font.custom("Karla-ExtraBold",size:20))
                         .padding(2)
                     ScrollView(.horizontal, showsIndicators: false){
-                        HStack{
-                            Text ("Starters")
+                        HStack(spacing:-3){
+                            Toggle(isOn: $startersOn){
+                                    Text("Starters")
+                                    .padding([.leading, .trailing], 15)
+                                    .padding([.top, .bottom], 8)
+                                    .background(startersOn ? Color(#colorLiteral(red: 0.933, green: 0.6, blue: 0.447, alpha: 1)) : Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
+                                    .cornerRadius(20)
+                                    
+                            }
+                                .toggleStyle(.button)
+                                .tint(.clear)
                                 .font(Font.custom("Karla-Bold",size:18))
                                 .foregroundColor(.black)
-                                .padding([.leading, .trailing], 20)
-                                .padding([.top, .bottom], 8)
-                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
-                                .cornerRadius(20)
+                                
+                            Toggle(isOn: $mainsOn){
+                                    Text("Mains")
+                                    .padding([.leading, .trailing], 15)
+                                    .padding([.top, .bottom], 8)
+                                    .background(mainsOn ? Color(#colorLiteral(red: 0.933, green: 0.6, blue: 0.447, alpha: 1)) : Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
+                                    .cornerRadius(20)
+                                    
+                            }
+                                .toggleStyle(.button)
+                                .tint(.clear)
+                                .font(Font.custom("Karla-Bold",size:18))
+                                .foregroundColor(.black)
                             
-                            Text ("Mains")
+                            Toggle(isOn: $dessertOn){
+                                    Text("Dessert")
+                                    .padding([.leading, .trailing], 15)
+                                    .padding([.top, .bottom], 8)
+                                    .background(dessertOn ? Color(#colorLiteral(red: 0.933, green: 0.6, blue: 0.447, alpha: 1)) : Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
+                                    .cornerRadius(20)
+                                    
+                            }
+                                .toggleStyle(.button)
+                                .tint(.clear)
                                 .font(Font.custom("Karla-Bold",size:18))
                                 .foregroundColor(.black)
-                                .padding([.leading, .trailing], 20)
-                                .padding([.top, .bottom], 8)
-                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
-                                .cornerRadius(20)
                             
-                            Text ("Dessert")
+                            Toggle(isOn: $drinksOn){
+                                    Text("Drinks")
+                                    .padding([.leading, .trailing], 15)
+                                    .padding([.top, .bottom], 8)
+                                    .background(drinksOn ? Color(#colorLiteral(red: 0.933, green: 0.6, blue: 0.447, alpha: 1)) : Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
+                                    .cornerRadius(20)
+                                    
+                            }
+                                .toggleStyle(.button)
+                                .tint(.clear)
                                 .font(Font.custom("Karla-Bold",size:18))
                                 .foregroundColor(.black)
-                                .padding([.leading, .trailing], 20)
-                                .padding([.top, .bottom], 8)
-                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
-                                .cornerRadius(20)
-                            
-                            Text ("Drinks")
-                                .font(Font.custom("Karla-Bold",size:18))
-                                .foregroundColor(.black)
-                                .padding([.leading, .trailing], 20)
-                                .padding([.top, .bottom], 8)
-                                .background(Color(#colorLiteral(red: 0.929, green: 0.937, blue: 0.933, alpha: 1)))
-                                .cornerRadius(20)
                         }
                     }
                 }.padding(.leading,10)
@@ -145,6 +169,7 @@ struct Menu: View {
                         addDish.price = item.price
                         addDish.desc = item.description
                         addDish.image = item.image
+                        addDish.category = item.category
                        // print(oneDish)
                     }
                     try? viewContext.save()
@@ -162,7 +187,20 @@ struct Menu: View {
     }
     
     func buildPredicate() -> NSPredicate{
-        return searchText == "" ? NSPredicate(value: true) : NSPredicate(format: "title CONTAINS[cd] %@", searchText)
+        
+        var filterCategory = [String]()
+        if startersOn { filterCategory.append("starters") }
+        if mainsOn { filterCategory.append("mains") }
+        if dessertOn { filterCategory.append("desserts") }
+        if drinksOn { filterCategory.append("drinks") }
+        
+        if filterCategory.count > 0 {
+            let searchPhrase = searchText == "" ? NSPredicate(value: true) : NSPredicate(format: "title CONTAINS[cd] %@", searchText)
+            let sortCategory = NSPredicate(format: "category in %@", filterCategory)
+            return NSCompoundPredicate(andPredicateWithSubpredicates: [searchPhrase, sortCategory])
+        }else{
+            return searchText == "" ? NSPredicate(value: true) : NSPredicate(format: "title CONTAINS[cd] %@", searchText)
+        }
     }
 }
 
