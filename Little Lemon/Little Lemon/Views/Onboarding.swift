@@ -11,16 +11,24 @@ let kFirstName = "first name key"
 let kLastName = "last name key"
 let kEmail = "email key"
 let kIsLoggedIn = "isLoggedIn key"
+let kPhoneNumber = "phoneNumber key"
+
+let kOrderStatus = "order notification key"
+let kPasswordChanges = "password notification key"
+let kSpecialOffers = "special offers notification key"
+let kNewsletter = "newsletter key"
+
 
 struct Onboarding: View {
-    @State var isLoggedIn = false;
+    @State var isLoggedIn = false
     
-    @State var showFormInvalidMessage = false;
-    @State var errorMsg = "";
+    @State var showFormInvalidMessage = false
+    @State var errorMsg = ""
     
-    @State var firstName: String = "";
-    @State var lastName: String = "";
-    @State var email: String = "";
+    @State var firstName: String = ""
+    @State var lastName: String = ""
+    @State var email: String = ""
+
     
     var body: some View {
         NavigationStack{
@@ -107,6 +115,13 @@ struct Onboarding: View {
                                 self.showFormInvalidMessage = true
                                 self.errorMsg = invalidFirstNameMsg + invalidLastNameMsg + invalidEmailMsg
                             }else{
+                                //set defaults
+                                UserDefaults.standard.set("", forKey: kPhoneNumber)
+                                UserDefaults.standard.set(true, forKey: kOrderStatus)
+                                UserDefaults.standard.set(true, forKey: kPasswordChanges)
+                                UserDefaults.standard.set(true, forKey: kSpecialOffers)
+                                UserDefaults.standard.set(true, forKey: kNewsletter)
+                                
                                 UserDefaults.standard.set(true, forKey: kIsLoggedIn)
                                 isLoggedIn = true
                             }
@@ -150,7 +165,7 @@ struct Onboarding: View {
         
         func isValid(email:String) -> Bool {
             guard !email.isEmpty else { return false }
-            let emailValidationRegex = "^[\\p{L}0-9!#$%&'*+\\/=?^_`{|}~-][\\p{L}0-9.!#$%&'*+\\/=?^_`{|}~-]{0,63}@[\\p{L}0-9-]+(?:\\.[\\p{L}0-9-]{2,7})*$"
+            let emailValidationRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
             let emailValidationPredicate = NSPredicate(format: "SELF MATCHES %@", emailValidationRegex)
             return emailValidationPredicate.evaluate(with: email)
         }
