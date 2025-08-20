@@ -8,24 +8,37 @@
 import SwiftUI
 
 struct UserProfile: View {
-    let savedFirstName = UserDefaults.standard.string(forKey:kFirstName) ?? ""
-    let savedLastName = UserDefaults.standard.string(forKey:kLastName) ?? ""
-    let savedEmail = UserDefaults.standard.string(forKey:kEmail) ?? ""
+    
+    var savedFirstName = UserDefaults.standard.string(forKey:kFirstName) ?? ""
+    var savedLastName = UserDefaults.standard.string(forKey:kLastName) ?? ""
+    var savedEmail = UserDefaults.standard.string(forKey:kEmail) ?? ""
+    var savedPhoneNumber = UserDefaults.standard.string(forKey:kPhoneNumber) ?? ""
+    
+    var savedOrderStatus = UserDefaults.standard.bool(forKey:kOrderStatus)
+    var savedPasswordChanges = UserDefaults.standard.bool(forKey:kPasswordChanges)
+    var savedSpecialOffers = UserDefaults.standard.bool(forKey:kSpecialOffers)
+    var savedNewsletter = UserDefaults.standard.bool(forKey:kNewsletter)
 
     @Environment(\.presentationMode) var presentation
     
     @State private var isLoggedOut = false
-    @State private var firstName: String = "";
-    @State private var lastName: String = "";
-    @State private var email: String = "";
-    @State private var phone: String = "(123) 456-7890";
+    @State private var firstName = ""
+    @State private var lastName = ""
+    @State private var email = ""
+    @State private var phone = ""
 
-    @State private var isOnOrderStatus: Bool = true;
-    @State private var isOnPasswordChanges: Bool = true;
-    @State private var isOnSpecialOffers: Bool = true;
-    @State private var isOnNewsletter: Bool = true;
+    @State private var isOnOrderStatus = false
+    @State private var isOnPasswordChanges = false
+    @State private var isOnSpecialOffers = false
+    @State private var isOnNewsletter = false
 
+    @State private var showFormInvalidMessage = false
+    @State private var errorMsg = ""
+    @State private var showFormSaved = false
+    
     var body: some View {
+        
+        
         ScrollView(.vertical, showsIndicators: false){
             NavigationLink(destination: Onboarding(), isActive: $isLoggedOut) { }
             VStack{
@@ -120,7 +133,7 @@ struct UserProfile: View {
                         .font(Font.custom("Karla-Bold",size:18))
                         .foregroundColor(Color(#colorLiteral(red: 0.4, green: 0.4, blue: 0.4, alpha: 1)))
                     
-                    TextField("Phone Number", text: $phone)
+                    TextField("+1234567890", text: $phone)
                         .font(.title3)
                         .padding(8)
                         .overlay(
@@ -169,7 +182,18 @@ struct UserProfile: View {
                 }
                 .padding(.top,20)
                 HStack(alignment:.center){
-                    Button("Discard changes") { }
+                    Button("Discard changes") {
+                        firstName = UserDefaults.standard.string(forKey:kFirstName) ?? ""
+                        lastName = UserDefaults.standard.string(forKey:kLastName) ?? ""
+                        email = UserDefaults.standard.string(forKey:kEmail) ?? ""
+                        phone = UserDefaults.standard.string(forKey:kPhoneNumber) ?? ""
+                        
+                        isOnOrderStatus = UserDefaults.standard.bool(forKey:kOrderStatus)
+                        isOnPasswordChanges = UserDefaults.standard.bool(forKey:kPasswordChanges)
+                        isOnSpecialOffers = UserDefaults.standard.bool(forKey:kSpecialOffers)
+                        isOnNewsletter = UserDefaults.standard.bool(forKey:kNewsletter)
+                        
+                    }
                         .padding(10)
                         .padding(.leading,11)
                         .padding(.trailing,11)
@@ -180,14 +204,79 @@ struct UserProfile: View {
                             RoundedRectangle(cornerRadius:5)
                                 .stroke(Color(#colorLiteral(red: 0.286, green: 0.369, blue: 0.341, alpha: 1)), lineWidth: 1)
                         )
-                    Button("Save changes") { }
-                        .padding(10)
-                        .padding(.leading,11)
-                        .padding(.trailing,11)
-                        .background(Color(#colorLiteral(red: 0.286, green: 0.369, blue: 0.341, alpha: 1)))
-                        .foregroundColor(.white)
-                        .font(Font.custom("Karla",size:18))
-                        .cornerRadius(8)
+                    Button(action:{
+                        
+                        if firstName.isEmpty && lastName.isEmpty && email.isEmpty{
+                            self.showFormInvalidMessage = true
+                            self.errorMsg = "All fields are required!"
+                        }else{
+                            
+                            let emailIsValid = isValidEmail(email: email)
+                            
+                            var invalidFirstNameMsg = ""
+                            if firstName.isEmpty {
+                                invalidFirstNameMsg = "\nA First Name is required!\n"
+                            }
+                            
+                            var invalidLastNameMsg = ""
+                            if lastName.isEmpty {
+                                invalidLastNameMsg = "\nA Last Name is required!\n"
+                            }
+                            
+                            var invalidEmailMsg = ""
+                            if email.isEmpty || !emailIsValid {
+                                invalidEmailMsg = "\nA valid Email Address is required!\n"
+                            }
+                            
+                            var invalidPhoneMsg = ""
+                            if !phone.isEmpty && !isValidPhoneNumber(phoneNum: phone) {
+                                invalidPhoneMsg = "\nPlease enter a valid Phone Number.\n (e.g. +1234567890)\n"
+                            }
+                            
+                            if !invalidFirstNameMsg.isEmpty || !invalidLastNameMsg.isEmpty || !invalidEmailMsg.isEmpty || !invalidPhoneMsg.isEmpty {
+                                self.showFormInvalidMessage = true
+                                self.errorMsg = invalidFirstNameMsg + invalidLastNameMsg + invalidEmailMsg + invalidPhoneMsg
+                            }else{
+                                UserDefaults.standard.set(email, forKey: kEmail)
+                                UserDefaults.standard.set(lastName, forKey: kLastName)
+                                UserDefaults.standard.set(firstName, forKey: kFirstName)
+                                UserDefaults.standard.set(phone, forKey: kPhoneNumber)
+                                UserDefaults.standard.set(isOnOrderStatus, forKey: kOrderStatus)
+                                UserDefaults.standard.set(isOnPasswordChanges, forKey: kPasswordChanges)
+                                UserDefaults.standard.set(isOnSpecialOffers, forKey: kSpecialOffers)
+                                UserDefaults.standard.set(isOnNewsletter, forKey: kNewsletter)
+                                self.showFormSaved = true
+                                
+                            }
+                        }
+                    }){
+                        HStack {
+                              Spacer()
+                              Text("Save Changes")
+                              Spacer()
+                            }
+                            .padding(10)
+                            .padding(.leading,11)
+                            .padding(.trailing,11)
+                            .background(Color(#colorLiteral(red: 0.286, green: 0.369, blue: 0.341, alpha: 1)))
+                            .foregroundColor(.white)
+                            .font(Font.custom("Karla",size:18))
+                            .cornerRadius(8)
+                        }
+                        .alert("Personal Information", isPresented: $showFormSaved, actions: {
+                            Button("OK", role: .cancel) { }
+                        }, message: {
+                            Text("Save Successful!")
+                        })
+                        .alert("ERROR", isPresented: $showFormInvalidMessage, actions: {
+                            Button("OK", role: .cancel) { }
+                        }, message: {
+                            Text(self.errorMsg)
+                        })
+                        
+                        
+                        
+                        
                 }.frame(alignment:.center)
                     .padding(.top,30)
                 
@@ -209,13 +298,30 @@ struct UserProfile: View {
                     }
                 }.navigationBarBackButtonHidden(true)
                 .onAppear {
-                    firstName = savedFirstName
-                    lastName = savedLastName
-                    email = savedEmail
+                    firstName = UserDefaults.standard.string(forKey:kFirstName) ?? ""
+                    lastName = UserDefaults.standard.string(forKey:kLastName) ?? ""
+                    email = UserDefaults.standard.string(forKey:kEmail) ?? ""
+                    phone = UserDefaults.standard.string(forKey:kPhoneNumber) ?? ""
+                    
+                    isOnOrderStatus = UserDefaults.standard.bool(forKey:kOrderStatus)
+                    isOnPasswordChanges = UserDefaults.standard.bool(forKey:kPasswordChanges)
+                    isOnSpecialOffers = UserDefaults.standard.bool(forKey:kSpecialOffers)
+                    isOnNewsletter = UserDefaults.standard.bool(forKey:kNewsletter)
                 }
             //  .navigationTitle(Text("Personal information"))
         }
     }
+        func isValidEmail(email:String) -> Bool {
+            guard !email.isEmpty else { return false }
+            let emailValidationRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+            let emailValidationPredicate = NSPredicate(format: "SELF MATCHES %@", emailValidationRegex)
+            return emailValidationPredicate.evaluate(with: email)
+        }
+        func isValidPhoneNumber(phoneNum:String) -> Bool {
+            let regEx = "^\\+(?:[0-9]?){6,14}[0-9]$"
+            let phoneCheck = NSPredicate(format: "SELF MATCHES[c] %@", regEx)
+            return phoneCheck.evaluate(with: phoneNum)
+        }
 }
 
 #Preview {
