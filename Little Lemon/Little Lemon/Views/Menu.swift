@@ -20,8 +20,7 @@ struct Menu: View {
     var body: some View {
         NavigationView{
             VStack{
-                Header()
-                
+               
                 VStack{
                     HeroContent()
                     TextField("Search menu for...", text: $searchText)

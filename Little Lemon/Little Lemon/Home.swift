@@ -11,6 +11,12 @@ struct Home: View {
     let persistence = PersistenceController.shared
     
     var body: some View {
+        VStack{
+            Header()
+            Menu()
+        }.navigationBarBackButtonHidden(true)
+        
+        /*
         TabView(){
             Menu()
                 .tag(0)
@@ -23,8 +29,9 @@ struct Home: View {
                 .tag(0)
                 .tabItem {
                     Label("Profile",systemImage: "square.and.pencil")
-                }
+                    }
         }.navigationBarBackButtonHidden(true)
+        */
     }
 }
 
